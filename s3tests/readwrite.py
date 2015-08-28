@@ -126,6 +126,7 @@ def write_file(bucket, file_name, fp):
     key.set_contents_from_file(fp)
 
 def main():
+    del os.environ['http_proxy']
     # parse options
     (options, args) = parse_options()
 
@@ -195,7 +196,7 @@ def main():
             warmup_pool = gevent.pool.Pool(size=100)
             for file_name in file_names:
                 fp = next(files)
-                warmup_pool.spawn_link_exception(
+                warmup_pool.spawn(
                     write_file,
                     bucket=bucket,
                     file_name=file_name,
@@ -214,7 +215,7 @@ def main():
         if not config.readwrite.get('deterministic_file_names'):
             for x in xrange(config.readwrite.writers):
                 this_rand = random.Random(rand_writer.randrange(2**32))
-                group.spawn_link_exception(
+                group.spawn(
                     writer,
                     bucket=bucket,
                     worker_id=x,
@@ -231,7 +232,7 @@ def main():
         rand_reader = random.Random(seeds['reader'])
         for x in xrange(config.readwrite.readers):
             this_rand = random.Random(rand_reader.randrange(2**32))
-            group.spawn_link_exception(
+            group.spawn(
                 reader,
                 bucket=bucket,
                 worker_id=x,
